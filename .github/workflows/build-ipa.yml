@@ -22,29 +22,26 @@ jobs:
     - name: Install ldid for signing
       run: brew install ldid
     
-    - name: Build IPA
+    - name: Build Archive
       run: |
         xcodebuild -project BatteryOptimizer.xcodeproj \
           -scheme BatteryOptimizer \
           -configuration Release \
-          -archivePath build/BatteryOptimizer.xcarchive \
+          -archivePath $PWD/build/BatteryOptimizer.xcarchive \
           archive \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_ALLOWED=NO
-        
-        xcodebuild -exportArchive \
-          -archivePath build/BatteryOptimizer.xcarchive \
-          -exportPath build \
-          -exportOptionsPlist exportOptions.plist
     
-    - name: Sign IPA (fakesign for sideload)
+    - name: Create IPA from Archive
       run: |
+        mkdir -p build/Payload
+        cp -r build/BatteryOptimizer.xcarchive/Products/Applications/BatteryOptimizer.app build/Payload/
         cd build
-        ldid -S BatteryOptimizer.app
-        mkdir Payload
-        cp -r BatteryOptimizer.app Payload/
+        ldid -S Payload/BatteryOptimizer.app/BatteryOptimizer
         zip -r BatteryOptimizer.ipa Payload
+        cd ..
+        ls -lh build/BatteryOptimizer.ipa
     
     - name: Create Release
       uses: softprops/action-gh-release@v1
