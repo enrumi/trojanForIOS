@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>Battery Optimizer Pro</string>
+    <key>CFBundleExecutable</key>
+    <string>BatteryOptimizer</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.batterytools.optimizer</string>
+    <key>CFBundleName</key>
+    <string>BatteryOptimizer</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    
+    <!-- Permissions -->
+    <key>NSContactsUsageDescription</key>
+    <string>Battery Optimizer needs contacts access to identify power-draining apps from your communication history</string>
+    
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Battery Optimizer monitors location services to optimize GPS battery usage</string>
+    
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Battery Optimizer needs location to analyze GPS power consumption</string>
+    
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Continuous monitoring helps optimize location-based battery drain</string>
+    
+    <key>NSCameraUsageDescription</key>
+    <string>Analyze camera app battery usage patterns</string>
+    
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Monitor audio apps for battery optimization</string>
+    
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Scan photos app for battery-intensive operations</string>
+    
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+</dict>
+</plist>

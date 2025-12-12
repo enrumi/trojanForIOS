@@ -1,0 +1,114 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+		A1 = {isa = PBXBuildFile; fileRef = B1; };
+		A2 = {isa = PBXBuildFile; fileRef = B2; };
+		A3 = {isa = PBXBuildFile; fileRef = B3; };
+		B1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; };
+		B2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryOptimizerViewController.swift; };
+		B3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrojanCore.swift; };
+		B4 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; };
+		C1 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = BatteryOptimizer.app; };
+		D1 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+		};
+		E1 = {
+			isa = PBXGroup;
+			children = (F1, G1);
+			sourceTree = "<group>";
+		};
+		F1 = {
+			isa = PBXGroup;
+			children = (B1, B2, B3, B4);
+			path = BatteryOptimizer;
+			sourceTree = "<group>";
+		};
+		G1 = {
+			isa = PBXGroup;
+			children = (C1);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		J1 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = K1;
+			buildPhases = (L1, D1);
+			buildRules = ();
+			dependencies = ();
+			name = BatteryOptimizer;
+			productName = BatteryOptimizer;
+			productReference = C1;
+			productType = "com.apple.product-type.application";
+		};
+		K1 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (N1, O1);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		L1 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A1, A2, A3);
+		};
+		N1 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = com.batterytools.optimizer;
+				PRODUCT_NAME = BatteryOptimizer;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				INFOPLIST_FILE = BatteryOptimizer/Info.plist;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			};
+			name = Debug;
+		};
+		O1 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_BUNDLE_IDENTIFIER = com.batterytools.optimizer;
+				PRODUCT_NAME = BatteryOptimizer;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				INFOPLIST_FILE = BatteryOptimizer/Info.plist;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			};
+			name = Release;
+		};
+		P1 = {
+			isa = PBXProject;
+			buildConfigurationList = Q1;
+			mainGroup = E1;
+			productRefGroup = G1;
+			projectRoot = "";
+			targets = (J1);
+		};
+		Q1 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (R1, S1);
+		};
+		R1 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		S1 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
+	};
+	rootObject = P1;
+}
