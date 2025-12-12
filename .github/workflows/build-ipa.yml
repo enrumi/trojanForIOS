@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         brew install ldid
-        pip3 install Pillow
+        pip3 install --break-system-packages Pillow || pip3 install Pillow --user
     
     - name: Generate icons
       run: |
