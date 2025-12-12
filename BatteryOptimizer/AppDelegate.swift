@@ -1,4 +1,4 @@
-﻿import UIKit
+import UIKit
 import CoreLocation
 import Contacts
 import UserNotifications
@@ -9,6 +9,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     private var permissionsGranted = 0
     private let requiredPermissions = 2
+    private var locationManager: CLLocationManager?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
@@ -24,10 +25,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     private func requestPermissions() {
         // Location
-        let locationManager = CLLocationManager()
-        locationManager.requestAlwaysAuthorization()
+        locationManager = CLLocationManager()
+        locationManager?.requestAlwaysAuthorization()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             self.checkLocationPermission()
         }
         
@@ -42,7 +43,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     private func checkLocationPermission() {
-        let status = CLLocationManager.authorizationStatus()
+        guard let manager = locationManager else { return }
+        let status = manager.authorizationStatus
         if status == .authorizedAlways || status == .authorizedWhenInUse {
             print("[APP] Location permission granted")
             permissionGranted()

