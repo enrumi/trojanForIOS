@@ -8,15 +8,18 @@
 		A1 = {isa = PBXBuildFile; fileRef = B1; };
 		A2 = {isa = PBXBuildFile; fileRef = B2; };
 		A3 = {isa = PBXBuildFile; fileRef = B3; };
-		B1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; };
-		B2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryOptimizerViewController.swift; };
-		B3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrojanCore.swift; };
-		B4 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; };
-		C1 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = BatteryOptimizer.app; };
+		A4 = {isa = PBXBuildFile; fileRef = B5; };
+		B1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B2 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryOptimizerViewController.swift; sourceTree = "<group>"; };
+		B3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrojanCore.swift; sourceTree = "<group>"; };
+		B4 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B5 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C1 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BatteryOptimizer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1 = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		E1 = {
 			isa = PBXGroup;
@@ -25,7 +28,7 @@
 		};
 		F1 = {
 			isa = PBXGroup;
-			children = (B1, B2, B3, B4);
+			children = (B1, B2, B3, B4, B5);
 			path = BatteryOptimizer;
 			sourceTree = "<group>";
 		};
@@ -38,7 +41,7 @@
 		J1 = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = K1;
-			buildPhases = (L1, D1);
+			buildPhases = (L1, M1, D1);
 			buildRules = ();
 			dependencies = ();
 			name = BatteryOptimizer;
@@ -56,56 +59,102 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (A1, A2, A3);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		M1 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A4);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		N1 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				INFOPLIST_FILE = BatteryOptimizer/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.batterytools.optimizer;
 				PRODUCT_NAME = BatteryOptimizer;
+				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
-				INFOPLIST_FILE = BatteryOptimizer/Info.plist;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 			};
 			name = Debug;
 		};
 		O1 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				INFOPLIST_FILE = BatteryOptimizer/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.batterytools.optimizer;
 				PRODUCT_NAME = BatteryOptimizer;
+				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
-				INFOPLIST_FILE = BatteryOptimizer/Info.plist;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 			};
 			name = Release;
 		};
 		P1 = {
 			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1400;
+				LastUpgradeCheck = 1400;
+			};
 			buildConfigurationList = Q1;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
 			mainGroup = E1;
 			productRefGroup = G1;
+			projectDirPath = "";
 			projectRoot = "";
 			targets = (J1);
 		};
 		Q1 = {
 			isa = XCConfigurationList;
 			buildConfigurations = (R1, S1);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		R1 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (DEBUG);
 				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		S1 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
